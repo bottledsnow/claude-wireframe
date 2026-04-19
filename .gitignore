@@ -1,0 +1,11 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Local-only notes and discussion records (never pushed)
+local/
+
+# Vite cache
+.vite/

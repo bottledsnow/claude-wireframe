@@ -7,6 +7,7 @@ src/WireframeEditor.jsx   # 編輯器主體
 src/WireframeEditor.css   # 樣式
 layouts/                  # 儲存的 JSON 佈局
 LayoutTest/               # 測試佈局
+local/                    # 本地筆記／討論紀錄（不上傳，已加入 .gitignore）
 ```
 
 ## 快捷鍵
@@ -39,6 +40,24 @@ LayoutTest/               # 測試佈局
   { "id": 1, "label": "Header", "x": 0, "y": 0, "w": 800, "h": 60, "type": "frame" },
   { "id": 2, "label": "Sidebar", "x": 0, "y": 60, "w": 200, "h": 400, "valign": "center" }
 ]
+```
+
+---
+
+## 同步上游更新（Fork 用戶）
+
+上游倉庫：`https://github.com/bottledsnow/claude-wireframe`
+
+如果你不熟悉 git，直接告訴 Claude：「幫我同步最新版本」，Claude 會自動處理。
+
+手動步驟：
+```bash
+# 第一次執行（加入上游）
+git remote add upstream https://github.com/bottledsnow/claude-wireframe.git
+
+# 之後每次同步
+git fetch upstream
+git merge upstream/main
 ```
 
 ---
