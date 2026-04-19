@@ -245,6 +245,7 @@ export default function WireframeEditor() {
 
   useEffect(() => {
     if (!liveMode) { liveEtagRef.current = null; return }
+    let initialized = false
     const poll = async () => {
       try {
         const res = await fetch('/layouts/live.json', { cache: 'no-store' })
@@ -252,6 +253,7 @@ export default function WireframeEditor() {
         const etag = res.headers.get('etag') + res.headers.get('last-modified')
         if (etag === liveEtagRef.current) return
         liveEtagRef.current = etag
+        if (!initialized) { initialized = true; return }
         const data = await res.json()
         setBlocks(data)
         nextId = data.length ? Math.max(...data.map(b => b.id)) + 1 : 1
