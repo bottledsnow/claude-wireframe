@@ -25,6 +25,8 @@ local/                    # 本地筆記／討論紀錄（不上傳，已加入 
 | `1` | 文字靠上（valign top） |
 | `2` | 文字置中（valign center） |
 | `3` | 文字靠下（valign bottom） |
+| `4` | 縮小檢視字體（label font size −1） |
+| `5` | 放大檢視字體（label font size +1） |
 
 ## Live Mode（Claude Code 協作流程）
 

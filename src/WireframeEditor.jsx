@@ -244,6 +244,13 @@ export default function WireframeEditor() {
         pushHistory()
         setBlocks(prev => prev.map(b => b.id === selected ? { ...b, valign: valignMap[e.key] } : b))
       }
+
+      if (e.key === '4') {
+        setLabelSize(s => Math.max(8, s - 1))
+      }
+      if (e.key === '5') {
+        setLabelSize(s => Math.min(36, s + 1))
+      }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
