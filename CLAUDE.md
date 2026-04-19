@@ -22,6 +22,16 @@ LayoutTest/               # 測試佈局
 | Delete / Backspace | 刪除選取方塊 |
 | `` ` `` | 切換顯示/隱藏 toolbar 與 sidebar |
 
+## Live Mode（Claude Code 協作流程）
+
+1. 在 app 點「○ Live」按鈕啟動（變成「● Live」）
+2. 告訴 Claude 你要的佈局
+3. Claude 寫入 `layouts/live.json`
+4. 畫布每秒自動更新，不需手動載入
+5. 繼續描述修改 → 循環
+
+> 前提：本地執行 `npm run dev`，並用 Claude Code 開啟此資料夾。
+
 ## Layout JSON 格式
 
 ```json

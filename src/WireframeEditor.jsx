@@ -126,6 +126,8 @@ export default function WireframeEditor() {
   const [editNameText, setEditNameText] = useState('')
   const [zoom, setZoom] = useState(1)
   const [showUI, setShowUI] = useState(true)
+  const [liveMode, setLiveMode] = useState(false)
+  const liveEtagRef = useRef(null)
 
   const canvasRef = useRef(null)
   const wrapperRef = useRef(null)
@@ -239,6 +241,25 @@ export default function WireframeEditor() {
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [selected, editingId, editingName, pushHistory])
+
+  useEffect(() => {
+    if (!liveMode) { liveEtagRef.current = null; return }
+    const poll = async () => {
+      try {
+        const res = await fetch('/layouts/live.json', { cache: 'no-store' })
+        if (!res.ok) return
+        const etag = res.headers.get('etag') + res.headers.get('last-modified')
+        if (etag === liveEtagRef.current) return
+        liveEtagRef.current = etag
+        const data = await res.json()
+        setBlocks(data)
+        nextId = data.length ? Math.max(...data.map(b => b.id)) + 1 : 1
+      } catch {}
+    }
+    poll()
+    const id = setInterval(poll, 1000)
+    return () => clearInterval(id)
+  }, [liveMode])
 
   useEffect(() => {
     const el = canvasRef.current
@@ -508,6 +529,13 @@ export default function WireframeEditor() {
             </div>
           )}
           {saveStatus && <span className="wf-status">{saveStatus}</span>}
+          <button
+            onClick={() => setLiveMode(v => !v)}
+            className={liveMode ? 'wf-live-btn active' : 'wf-live-btn'}
+            title="監聽 /layouts/live.json 自動更新"
+          >
+            {liveMode ? '● Live' : '○ Live'}
+          </button>
           <button onClick={loadLayout}>載入</button>
           <button onClick={saveLayout} className="wf-save">儲存</button>
           <button onClick={exportMd} className="wf-export">輸出</button>

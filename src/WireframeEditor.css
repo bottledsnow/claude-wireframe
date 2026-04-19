@@ -129,6 +129,8 @@
 .wf-save   { border-color: #3a6aaa !important; color: #6af !important; }
 .wf-export { border-color: #3a6a4a !important; color: #6fa !important; }
 .wf-clear  { border-color: #6a3333 !important; color: #f88 !important; }
+.wf-live-btn { border-color: #4a3a6a !important; color: #a8f !important; }
+.wf-live-btn.active { border-color: #7a3aaa !important; color: #c8f !important; background: #2a1a3a !important; }
 
 .wf-valign {
   display: flex;
