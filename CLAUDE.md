@@ -14,9 +14,10 @@ local/                    # 本地筆記／討論紀錄（不上傳，已加入 
 
 | 操作 | 說明 |
 |---|---|
-| Click canvas | 新增方塊 |
+| Click canvas / 視窗框內 | 新增方塊 |
 | Drag | 移動 |
 | Shift+drag | 軸鎖定移動 |
+| Ctrl+drag 視窗框 | 移動視窗框 |
 | Ctrl+Shift+drag | 複製並移動複本 |
 | Drag 右下角 | 縮放 |
 | Double-click | 編輯標籤 |

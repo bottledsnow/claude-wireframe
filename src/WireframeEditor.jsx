@@ -36,8 +36,9 @@ function buildHierarchy(blocks) {
   return { childrenOf, roots: sorted.filter(b => !parentOf[b.id]) }
 }
 
-const CANVAS_W = 3000
-const CANVAS_H = 2000
+const CANVAS_MIN_W = 1600
+const CANVAS_MIN_H = 900
+const CANVAS_PAD = 300
 
 function generateLayoutMd(blocks, layoutName) {
   const frame = blocks.find(b => b.type === 'frame')
@@ -306,7 +307,7 @@ export default function WireframeEditor() {
 
   const addBlock = useCallback((e) => {
     if (suppressNextClickRef.current) { suppressNextClickRef.current = false; return }
-    if (e.target !== designRef.current) return
+    if (e.target.closest('.wf-block:not(.frame)')) return
     const rect = designRef.current.getBoundingClientRect()
     const z = zoomRef.current
     const x = Math.round(((e.clientX - rect.left) / z - 75) / 10) * 10
@@ -498,6 +499,9 @@ export default function WireframeEditor() {
     return 0
   })
 
+  const canvasW = blocks.length ? Math.max(CANVAS_MIN_W, ...blocks.map(b => b.x + b.w)) + CANVAS_PAD : CANVAS_MIN_W
+  const canvasH = blocks.length ? Math.max(CANVAS_MIN_H, ...blocks.map(b => b.y + b.h)) + CANVAS_PAD : CANVAS_MIN_H
+
   return (
     <div className="wf-root">
       {!showUI && (
@@ -570,12 +574,12 @@ export default function WireframeEditor() {
             className="wf-canvas-wrapper"
             ref={wrapperRef}
             onClick={addBlock}
-            style={{ width: CANVAS_W * zoom, height: CANVAS_H * zoom }}
+            style={{ width: canvasW * zoom, height: canvasH * zoom }}
           >
             <div
               className="wf-canvas-inner"
               ref={designRef}
-              style={{ transform: `scale(${zoom})`, transformOrigin: '0 0', width: CANVAS_W, height: CANVAS_H, '--label-size': `${labelSize}px` }}
+              style={{ transform: `scale(${zoom})`, transformOrigin: '0 0', width: canvasW, height: canvasH, '--label-size': `${labelSize}px` }}
             >
               {sortedBlocks.map(b => (
                 b.type === 'frame' ? (
@@ -586,7 +590,7 @@ export default function WireframeEditor() {
                   >
                     <div
                       className="wf-frame-header"
-                      onMouseDown={(e) => startMove(e, b.id)}
+                      onMouseDown={(e) => { if (e.ctrlKey) startMove(e, b.id) }}
                       onDoubleClick={(e) => startEdit(e, b.id, b.label)}
                     >
                       {editingId === b.id ? (
