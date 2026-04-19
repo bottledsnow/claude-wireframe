@@ -22,6 +22,9 @@ local/                    # 本地筆記／討論紀錄（不上傳，已加入 
 | Double-click | 編輯標籤 |
 | Delete / Backspace | 刪除選取方塊 |
 | `` ` `` | 切換顯示/隱藏 toolbar 與 sidebar |
+| `1` | 文字靠上（valign top） |
+| `2` | 文字置中（valign center） |
+| `3` | 文字靠下（valign bottom） |
 
 ## Live Mode（Claude Code 協作流程）
 

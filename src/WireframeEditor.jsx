@@ -238,6 +238,12 @@ export default function WireframeEditor() {
       if (e.key === '`') {
         setShowUI(v => !v)
       }
+
+      if (selected && (e.key === '1' || e.key === '2' || e.key === '3')) {
+        const valignMap = { '1': 'top', '2': 'center', '3': 'bottom' }
+        pushHistory()
+        setBlocks(prev => prev.map(b => b.id === selected ? { ...b, valign: valignMap[e.key] } : b))
+      }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
