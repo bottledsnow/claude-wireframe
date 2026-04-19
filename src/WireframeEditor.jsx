@@ -125,6 +125,7 @@ export default function WireframeEditor() {
   const [editingName, setEditingName] = useState(false)
   const [editNameText, setEditNameText] = useState('')
   const [zoom, setZoom] = useState(1)
+  const [showUI, setShowUI] = useState(true)
 
   const canvasRef = useRef(null)
   const wrapperRef = useRef(null)
@@ -229,6 +230,10 @@ export default function WireframeEditor() {
         if (!snap) return
         setBlocks(snap.blocks)
         setSelected(snap.selected)
+      }
+
+      if (e.key === '`') {
+        setShowUI(v => !v)
       }
     }
     window.addEventListener('keydown', onKeyDown)
@@ -458,7 +463,12 @@ export default function WireframeEditor() {
 
   return (
     <div className="wf-root">
-      <div className="wf-toolbar">
+      {!showUI && (
+        <button className="wf-ui-toggle" onClick={() => setShowUI(true)} title="顯示工具列 (`)">
+          ☰
+        </button>
+      )}
+      {showUI && <div className="wf-toolbar">
         <div className="wf-left">
           <span className="wf-hint">點擊畫布新增 · 拖拉移動 · Shift+拖拉鎖軸 · Ctrl+Shift+拖拉複製 · 雙擊改名 · Delete 刪除 · Ctrl+C 複製 · Ctrl+X 剪下 · Ctrl+V 貼上 · Ctrl+Z 復原 · Ctrl+滾輪縮放</span>
         </div>
@@ -503,7 +513,7 @@ export default function WireframeEditor() {
           <button onClick={exportMd} className="wf-export">輸出</button>
           <button onClick={clearAll} className="wf-clear">清除</button>
         </div>
-      </div>
+      </div>}
 
       <div className="wf-body">
         <div className="wf-canvas" ref={canvasRef}>
@@ -573,7 +583,7 @@ export default function WireframeEditor() {
           </div>
         </div>
 
-        <div className="wf-sidebar">
+        {showUI && <div className="wf-sidebar">
           <div className="wf-sidebar-section">
             <div className="wf-sidebar-title">縮放</div>
             <div className="wf-zoom-row">
@@ -609,7 +619,7 @@ export default function WireframeEditor() {
               階層結構文字<br />省 Token、Claude 好讀
             </div>
           </div>
-        </div>
+        </div>}
       </div>
     </div>
   )

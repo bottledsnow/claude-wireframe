@@ -3,10 +3,10 @@
 ## 檔案位置
 
 ```
-renderer/src/WireframeEditor.jsx   # 編輯器主體
-renderer/src/WireframeEditor.css   # 樣式
-layouts/                           # 儲存的 JSON 佈局
-LayoutTest/                        # 測試佈局
+src/WireframeEditor.jsx   # 編輯器主體
+src/WireframeEditor.css   # 樣式
+layouts/                  # 儲存的 JSON 佈局
+LayoutTest/               # 測試佈局
 ```
 
 ## 快捷鍵
@@ -20,13 +20,7 @@ LayoutTest/                        # 測試佈局
 | Drag 右下角 | 縮放 |
 | Double-click | 編輯標籤 |
 | Delete / Backspace | 刪除選取方塊 |
-
-## IPC 頻道
-
-| Channel | 方向 | 說明 |
-|---|---|---|
-| `save-layout` | renderer → main | 原生儲存對話框 |
-| `load-layout` | renderer → main | 原生開啟對話框 |
+| `` ` `` | 切換顯示/隱藏 toolbar 與 sidebar |
 
 ## Layout JSON 格式
 

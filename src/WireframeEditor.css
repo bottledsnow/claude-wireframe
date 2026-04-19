@@ -7,6 +7,31 @@
   font-family: system-ui, 'Segoe UI', sans-serif;
 }
 
+/* ─── UI Toggle ─── */
+
+.wf-ui-toggle {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 100;
+  background: #1e1f28cc;
+  border: 1px solid #2e2f3a;
+  color: #888;
+  border-radius: 4px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wf-ui-toggle:hover {
+  background: #2e2f3a;
+  color: #ccc;
+}
+
 /* ─── Toolbar ─── */
 
 .wf-toolbar {
@@ -153,6 +178,11 @@
   overflow: auto;
   background: #0d0e12;
   cursor: crosshair;
+  scrollbar-color: transparent transparent;
+}
+
+.wf-canvas:hover {
+  scrollbar-color: #444 transparent;
 }
 
 /* Layout wrapper — actual CSS size = design * zoom, so the scrollbar tracks the visual canvas */
