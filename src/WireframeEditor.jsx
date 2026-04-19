@@ -127,6 +127,7 @@ export default function WireframeEditor() {
   const [zoom, setZoom] = useState(1)
   const [showUI, setShowUI] = useState(true)
   const [liveMode, setLiveMode] = useState(false)
+  const [labelSize, setLabelSize] = useState(13)
   const liveEtagRef = useRef(null)
 
   const canvasRef = useRef(null)
@@ -529,6 +530,11 @@ export default function WireframeEditor() {
             </div>
           )}
           {saveStatus && <span className="wf-status">{saveStatus}</span>}
+          <div className="wf-fontsize">
+            <button onClick={() => setLabelSize(s => Math.max(8, s - 1))} title="縮小字體">A−</button>
+            <span className="wf-fontsize-val">{labelSize}</span>
+            <button onClick={() => setLabelSize(s => Math.min(36, s + 1))} title="放大字體">A+</button>
+          </div>
           <button
             onClick={() => setLiveMode(v => !v)}
             className={liveMode ? 'wf-live-btn active' : 'wf-live-btn'}
@@ -554,7 +560,7 @@ export default function WireframeEditor() {
             <div
               className="wf-canvas-inner"
               ref={designRef}
-              style={{ transform: `scale(${zoom})`, transformOrigin: '0 0', width: CANVAS_W, height: CANVAS_H }}
+              style={{ transform: `scale(${zoom})`, transformOrigin: '0 0', width: CANVAS_W, height: CANVAS_H, '--label-size': `${labelSize}px` }}
             >
               {sortedBlocks.map(b => (
                 b.type === 'frame' ? (
