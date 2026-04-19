@@ -294,61 +294,62 @@
 /* ─── Frame blocks ─── */
 
 .wf-block.frame {
-  border: 1.5px dashed #2a5a8a;
-  background: rgba(20, 50, 90, 0.05);
+  border: 1.5px dashed #7a6400;
+  background: rgba(120, 100, 0, 0.04);
   cursor: default;
   pointer-events: none; /* interior is click-through */
-  align-items: flex-start;
-  justify-content: flex-start;
-  flex-direction: column;
+  overflow: hidden;
 }
 
 .wf-block.frame.selected {
-  border-color: #44aaff;
+  border-color: #c8a000;
   border-style: dashed;
-  background: rgba(30, 70, 120, 0.08);
+  background: rgba(150, 120, 0, 0.07);
 }
 
 .wf-frame-header {
-  pointer-events: auto; /* header is interactive */
-  width: 100%;
-  padding: 4px 10px;
-  font-size: var(--label-size, 12px);
-  color: #4a8abf;
-  background: rgba(20, 50, 90, 0.3);
-  border-bottom: 1px solid #1e3d5f;
+  pointer-events: auto; /* covers full frame for dragging */
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 56px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  color: rgba(200, 160, 0, 0.08);
+  background: none;
+  border: none;
   cursor: move;
   user-select: none;
-  flex-shrink: 0;
-  box-sizing: border-box;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .wf-block.frame.selected .wf-frame-header {
-  color: #6bbfff;
-  background: rgba(30, 70, 130, 0.4);
-  border-bottom-color: #2a5a9a;
+  color: rgba(220, 180, 0, 0.14);
 }
 
 .wf-frame-input {
   background: transparent;
   border: none;
-  border-bottom: 1px solid #44aaff;
-  color: #fff;
-  font-size: var(--label-size, 12px);
+  border-bottom: 1px solid #c8a000;
+  color: rgba(220, 180, 0, 0.7);
+  font-size: 13px;
   outline: none;
   width: 80%;
+  position: relative;
+  z-index: 1;
 }
 
 .wf-block.frame .wf-resize {
   pointer-events: auto; /* resize handle is interactive */
-  background: linear-gradient(135deg, transparent 50%, #2a5a8a 50%);
+  background: linear-gradient(135deg, transparent 50%, #7a6400 50%);
 }
 
 .wf-block.frame.selected .wf-resize {
-  background: linear-gradient(135deg, transparent 50%, #44aaff 50%);
+  background: linear-gradient(135deg, transparent 50%, #c8a000 50%);
 }
 
 /* ─── Sidebar ─── */
