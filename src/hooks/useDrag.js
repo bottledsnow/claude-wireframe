@@ -1,6 +1,9 @@
 import { useRef, useEffect } from 'react'
 import { nextId } from '../utils'
 
+const GRID = 20
+const snap = v => Math.round(v / GRID) * GRID
+
 export function useDrag(zoomRef, blocksRef, setBlocks, setSelected, pushHistory, editingIdRef) {
   const dragRef = useRef(null)
   const suppressNextClickRef = useRef(false)
@@ -17,8 +20,8 @@ export function useDrag(zoomRef, blocksRef, setBlocks, setSelected, pushHistory,
       }
       setBlocks(prev => prev.map(b => {
         if (b.id !== id) return b
-        if (type === 'move')   return { ...b, x: Math.max(0, startBlock.x + dx), y: Math.max(0, startBlock.y + dy) }
-        if (type === 'resize') return { ...b, w: Math.max(80, startBlock.w + dx), h: Math.max(36, startBlock.h + dy) }
+        if (type === 'move')   return { ...b, x: snap(Math.max(0, startBlock.x + dx)), y: snap(Math.max(0, startBlock.y + dy)) }
+        if (type === 'resize') return { ...b, w: Math.max(GRID * 4, snap(startBlock.w + dx)), h: Math.max(GRID * 2, snap(startBlock.h + dy)) }
         return b
       }))
     }

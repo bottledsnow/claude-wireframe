@@ -90,6 +90,105 @@ export function generateLayoutMd(blocks, layoutName) {
   return lines.join('\n') + '\n'
 }
 
+// ── 低階：畫一張 ASCII 方塊圖 ──────────────────────────────
+function drawAscii(viewport, innerBlocks) {
+  const COLS = 60
+  const { w: vW, h: vH, x: vX = 0, y: vY = 0 } = viewport
+  const ROWS = Math.min(40, Math.max(6, Math.round(COLS * (vH / vW) * 0.5)))
+  const grid = Array.from({ length: ROWS }, () => Array(COLS).fill(' '))
+
+  const toCol = px => Math.min(COLS - 1, Math.max(0, Math.round(px / vW * (COLS - 1))))
+  const toRow = py => Math.min(ROWS - 1, Math.max(0, Math.round(py / vH * (ROWS - 1))))
+
+  const drawBox = (r1, c1, r2, c2, label) => {
+    if (c2 <= c1 || r2 <= r1) return
+    for (let c = c1; c <= c2; c++) { grid[r1][c] = '─'; grid[r2][c] = '─' }
+    for (let r = r1; r <= r2; r++) { grid[r][c1] = '│'; grid[r][c2] = '│' }
+    grid[r1][c1] = '┌'; grid[r1][c2] = '┐'
+    grid[r2][c1] = '└'; grid[r2][c2] = '┘'
+    const midR = Math.round((r1 + r2) / 2)
+    const innerW = c2 - c1 - 1
+    if (innerW > 0 && label) {
+      const text = label.length > innerW ? label.slice(0, innerW - 1) + '…' : label
+      const startC = c1 + 1 + Math.floor((innerW - text.length) / 2)
+      for (let i = 0; i < text.length; i++) grid[midR][startC + i] = text[i]
+    }
+  }
+
+  drawBox(0, 0, ROWS - 1, COLS - 1, '')
+  for (const b of [...innerBlocks].sort((a, b) => (b.w * b.h) - (a.w * a.h))) {
+    drawBox(
+      Math.max(1, toRow(b.y - vY)),
+      Math.max(1, toCol(b.x - vX)),
+      Math.min(ROWS - 2, toRow(b.y - vY + b.h)),
+      Math.min(COLS - 2, toCol(b.x - vX + b.w)),
+      b.label
+    )
+  }
+  return grid.map(row => row.join('')).join('\n')
+}
+
+// ── 低階：產生區塊的文字描述 ────────────────────────────────
+function blockDesc(b, parentW, parentH, parentX = 0, parentY = 0) {
+  const wPct  = Math.round(b.w / parentW * 100)
+  const hPct  = Math.round(b.h / parentH * 100)
+  const topPct  = Math.round((b.y - parentY) / parentH * 100)
+  const leftPct = Math.round((b.x - parentX) / parentW * 100)
+  const parts = []
+  parts.push(wPct >= 90 ? 'full-width' : `width: ${wPct}%`)
+  parts.push(`height: ${hPct}%`)
+  if (topPct > 0)  parts.push(`top: ${topPct}%`)
+  if (leftPct > 0 && wPct < 90) parts.push(`left: ${leftPct}%`)
+  return `${b.label.padEnd(14)}${parts.join('  ')}`
+}
+
+// ── 公開：單張 ASCII（原有功能保留）────────────────────────
+export function generateLayoutAscii(blocks, layoutName) {
+  const frame = blocks.find(b => b.type === 'frame')
+  if (!frame) return '(no frame — add a viewport frame first)\n'
+  const TOL = 10
+  const inner = blocks.filter(b => b.type !== 'frame' &&
+    b.x >= frame.x - TOL && b.y >= frame.y - TOL &&
+    b.x + b.w <= frame.x + frame.w + TOL && b.y + b.h <= frame.y + frame.h + TOL)
+  return [`# ${layoutName}`, '', drawAscii(frame, inner)].join('\n') + '\n'
+}
+
+// ── 公開：整體 + 分區完整文件 ──────────────────────────────
+export function generateFullDocument(blocks, layoutName) {
+  const frame = blocks.find(b => b.type === 'frame')
+  if (!frame) return '(no frame — add a viewport frame first)\n'
+
+  const { childrenOf } = buildHierarchy(blocks)
+  const topLevel = (childrenOf[frame.id] || []).sort((a, b) => a.y - b.y || a.x - b.x)
+  if (!topLevel.length) return `# ${layoutName}\n\n(frame is empty)\n`
+
+  const lines = [
+    `# ${layoutName}`,
+    '',
+    `> 環境：${frame.label}  ${frame.w}×${frame.h}`,
+    '',
+    '---',
+    '',
+    '## 整體架構',
+    '',
+    drawAscii(frame, topLevel),
+    '',
+  ]
+
+  for (const b of topLevel)
+    lines.push(blockDesc(b, frame.w, frame.h, frame.x, frame.y))
+
+  for (const b of topLevel) {
+    const children = (childrenOf[b.id] || []).sort((a, c) => a.y - c.y || a.x - c.x)
+    if (!children.length) continue
+    lines.push('', '---', '', `## ${b.label}`, '', drawAscii(b, children), '')
+    for (const c of children)
+      lines.push(blockDesc(c, b.w, b.h, b.x, b.y))
+  }
+
+  return lines.join('\n') + '\n'
+}
+
 export function downloadBlob(content, filename, type) {
   const url = URL.createObjectURL(new Blob([content], { type }))
   Object.assign(document.createElement('a'), { href: url, download: filename }).click()

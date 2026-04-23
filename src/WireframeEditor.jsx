@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import './WireframeEditor.css'
-import { PRESETS, CANVAS_MIN_W, CANVAS_MIN_H, CANVAS_PAD, nextId, setNextId, resetNextId, buildHierarchy, generateLayoutMd, downloadBlob } from './utils'
+import { PRESETS, CANVAS_MIN_W, CANVAS_MIN_H, CANVAS_PAD, nextId, setNextId, resetNextId, buildHierarchy, generateLayoutMd, generateLayoutAscii, generateFullDocument, downloadBlob } from './utils'
 import { useDrag } from './hooks/useDrag'
 import { useKeyboard } from './hooks/useKeyboard'
 import { useZoom } from './hooks/useZoom'
@@ -47,11 +47,12 @@ export default function WireframeEditor() {
     if (e.target.closest('.wf-block:not(.frame)')) return
     const rect = designRef.current.getBoundingClientRect()
     const z = zoomRef.current
-    const x = Math.round(((e.clientX - rect.left) / z - 75) / 10) * 10
-    const y = Math.round(((e.clientY - rect.top)  / z - 30) / 10) * 10
+    const snap = v => Math.round(v / 20) * 20
+    const x = snap((e.clientX - rect.left) / z - 75)
+    const y = snap((e.clientY - rect.top)  / z - 30)
     const id = nextId()
     pushHistory()
-    setBlocks(prev => [...prev, { id, label: 'Block', x: Math.max(0, x), y: Math.max(0, y), w: 150, h: 60, valign: 'center' }])
+    setBlocks(prev => [...prev, { id, label: 'Block', x: Math.max(0, x), y: Math.max(0, y), w: 160, h: 60, valign: 'center' }])
     setSelected(id)
   }, [pushHistory, suppressNextClickRef, zoomRef])
 
@@ -75,6 +76,18 @@ export default function WireframeEditor() {
     setSelected(id)
     canvasRef.current?.scrollTo({ top: 0, left: 0, behavior: 'smooth' })
   }, [pushHistory])
+
+  const copyAscii = useCallback(() => {
+    if (!blocks.length) return
+    navigator.clipboard.writeText(generateLayoutAscii(blocks, layoutName))
+    setSaveStatus('ASCII 已複製'); setTimeout(() => setSaveStatus(''), 2000)
+  }, [blocks, layoutName])
+
+  const copyFullDoc = useCallback(() => {
+    if (!blocks.length) return
+    navigator.clipboard.writeText(generateFullDocument(blocks, layoutName))
+    setSaveStatus('文件已複製'); setTimeout(() => setSaveStatus(''), 2000)
+  }, [blocks, layoutName])
 
   const copySummary = useCallback(() => {
     if (!blocks.length) return
@@ -212,8 +225,10 @@ export default function WireframeEditor() {
           <div className="wf-sidebar-divider" />
           <div className="wf-sidebar-section">
             <div className="wf-sidebar-title">匯出</div>
-            <button className="wf-sidebar-btn wf-copy-btn" onClick={copySummary}>複製摘要</button>
-            <div className="wf-sidebar-note">階層結構文字<br />省 Token、Claude 好讀</div>
+            <button className="wf-sidebar-btn wf-copy-btn" onClick={copyFullDoc}>複製完整文件</button>
+            <div className="wf-sidebar-note">整體架構 + 各區細節<br />直接丟給 Claude</div>
+            <button className="wf-sidebar-btn wf-copy-btn" onClick={copyAscii} style={{marginTop: 6}}>複製 ASCII</button>
+            <div className="wf-sidebar-note">單張整體圖</div>
           </div>
         </div>}
       </div>
