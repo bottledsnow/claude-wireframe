@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import './WireframeEditor.css'
-import { PRESETS, CANVAS_MIN_W, CANVAS_MIN_H, CANVAS_PAD, nextId, setNextId, resetNextId, buildHierarchy, generateLayoutMd, generateLayoutAscii, generateFullDocument, downloadBlob } from './utils'
+import { PRESETS, CANVAS_MIN_W, CANVAS_MIN_H, CANVAS_PAD, nextId, setNextId, resetNextId, generateFullDocument, downloadBlob } from './utils'
 import { useDrag } from './hooks/useDrag'
 import { useKeyboard } from './hooks/useKeyboard'
 import { useZoom } from './hooks/useZoom'
@@ -13,7 +13,7 @@ export default function WireframeEditor() {
   const [editingId, setEditingId] = useState(null)
   const [editText, setEditText] = useState('')
   const [saveStatus, setSaveStatus] = useState('')
-  const [layoutName, setLayoutName] = useState('Untitled')
+  const [layoutName, setLayoutName] = useState('wireframe')
   const [editingName, setEditingName] = useState(false)
   const [editNameText, setEditNameText] = useState('')
   const [showUI, setShowUI] = useState(true)
@@ -77,36 +77,6 @@ export default function WireframeEditor() {
     canvasRef.current?.scrollTo({ top: 0, left: 0, behavior: 'smooth' })
   }, [pushHistory])
 
-  const copyAscii = useCallback(() => {
-    if (!blocks.length) return
-    navigator.clipboard.writeText(generateLayoutAscii(blocks, layoutName))
-    setSaveStatus('ASCII 已複製'); setTimeout(() => setSaveStatus(''), 2000)
-  }, [blocks, layoutName])
-
-  const copyFullDoc = useCallback(() => {
-    if (!blocks.length) return
-    navigator.clipboard.writeText(generateFullDocument(blocks, layoutName))
-    setSaveStatus('文件已複製'); setTimeout(() => setSaveStatus(''), 2000)
-  }, [blocks, layoutName])
-
-  const copySummary = useCallback(() => {
-    if (!blocks.length) return
-    const { childrenOf, roots } = buildHierarchy(blocks)
-    const lines = [`# ${layoutName}\n`]
-    const renderNode = (block, parent, indent) => {
-      if (parent) {
-        const rx = block.x - parent.x, ry = block.y - parent.y
-        const pW = v => Math.round(v / parent.w * 100), pH = v => Math.round(v / parent.h * 100)
-        lines.push(`${indent}[${block.label}]  left:${pW(rx)}% top:${pH(ry)}%  ${block.w}×${block.h}  (w:${pW(block.w)}% h:${pH(block.h)}%)`)
-      } else {
-        lines.push(`${indent}[${block.label}]  x:${block.x} y:${block.y}  ${block.w}×${block.h}`)
-      }
-      for (const child of (childrenOf[block.id] || [])) renderNode(child, block, indent + '  ')
-    }
-    for (const root of roots) renderNode(root, null, '')
-    navigator.clipboard.writeText(lines.join('\n'))
-    setSaveStatus('摘要已複製'); setTimeout(() => setSaveStatus(''), 2000)
-  }, [blocks, layoutName])
 
   const saveLayout = useCallback(() => {
     downloadBlob(JSON.stringify(blocks, null, 2), `${layoutName}.json`, 'application/json')
@@ -114,7 +84,8 @@ export default function WireframeEditor() {
   }, [blocks, layoutName])
 
   const exportMd = useCallback(() => {
-    downloadBlob(generateLayoutMd(blocks, layoutName), `${layoutName}.md`, 'text/markdown')
+    const today = new Date(); const d = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`
+    downloadBlob(generateFullDocument(blocks, layoutName), `${layoutName}-${d}.md`, 'text/markdown')
     setSaveStatus('已輸出'); setTimeout(() => setSaveStatus(''), 2000)
   }, [blocks, layoutName])
 
@@ -141,7 +112,7 @@ export default function WireframeEditor() {
   }, [blocks, pushHistory])
 
   const startEditName = useCallback(() => { setEditNameText(layoutName); setEditingName(true) }, [layoutName])
-  const commitEditName = useCallback(() => { setLayoutName(editNameText.trim() || 'Untitled'); setEditingName(false) }, [editNameText])
+  const commitEditName = useCallback(() => { setLayoutName(editNameText.trim() || 'wireframe'); setEditingName(false) }, [editNameText])
 
   const selectedBlock = blocks.find(b => b.id === selected)
   const sortedBlocks = [...blocks].sort((a, b) => (b.type === 'frame' ? 1 : 0) - (a.type === 'frame' ? 1 : 0))
@@ -221,14 +192,6 @@ export default function WireframeEditor() {
                 <span>{p.label}</span><span className="wf-preset-size">{p.w}×{p.h}</span>
               </button>
             ))}
-          </div>
-          <div className="wf-sidebar-divider" />
-          <div className="wf-sidebar-section">
-            <div className="wf-sidebar-title">匯出</div>
-            <button className="wf-sidebar-btn wf-copy-btn" onClick={copyFullDoc}>複製完整文件</button>
-            <div className="wf-sidebar-note">整體架構 + 各區細節<br />直接丟給 Claude</div>
-            <button className="wf-sidebar-btn wf-copy-btn" onClick={copyAscii} style={{marginTop: 6}}>複製 ASCII</button>
-            <div className="wf-sidebar-note">單張整體圖</div>
           </div>
         </div>}
       </div>
