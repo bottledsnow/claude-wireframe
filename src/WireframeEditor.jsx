@@ -54,12 +54,12 @@ export default function WireframeEditor() {
     const z = zoomRef.current
     const frame = blocksRef.current.find(b => b.type === 'frame')
     const { snapX, snapY } = getAsciiSnap(frame)
-    const x = Math.round(((e.clientX - rect.left) / z - 75) / snapX) * snapX
-    const y = Math.round(((e.clientY - rect.top)  / z - 30) / snapY) * snapY
+    const x = Math.round((e.clientX - rect.left) / z / snapX) * snapX
+    const y = Math.round((e.clientY - rect.top)  / z / snapY) * snapY
     const id = nextId()
     pushHistory()
     setMultiSelected(new Set())
-    setBlocks(prev => [...prev, { id, label: 'Block', x: Math.max(0, x), y: Math.max(0, y), w: 160, h: 60, valign: 'center' }])
+    setBlocks(prev => [...prev, { id, label: 'Block', x: Math.max(0, x), y: Math.max(0, y), w: snapX * 5, h: snapY * 2, valign: 'center' }])
     setSelected(id)
   }, [pushHistory, suppressNextClickRef, zoomRef])
 

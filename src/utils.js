@@ -112,12 +112,26 @@ function drawAscii(viewport, innerBlocks) {
   const toCol = px => Math.min(COLS - 1, Math.max(0, Math.round(px / vW * (COLS - 1))))
   const toRow = py => Math.min(ROWS - 1, Math.max(0, Math.round(py / vH * (ROWS - 1))))
 
+  const BOX_DIRS = {
+    '─': [1,1,0,0], '│': [0,0,1,1],
+    '┌': [0,1,0,1], '┐': [1,0,0,1], '└': [0,1,1,0], '┘': [1,0,1,0],
+    '├': [0,1,1,1], '┤': [1,0,1,1], '┬': [1,1,0,1], '┴': [1,1,1,0], '┼': [1,1,1,1],
+  }
+  const FROM_DIRS = {}
+  for (const [ch, d] of Object.entries(BOX_DIRS)) FROM_DIRS[d.join('')] = ch
+  const put = (r, c, ch) => {
+    const ex = grid[r][c]
+    if (ex === ' ') { grid[r][c] = ch; return }
+    const a = BOX_DIRS[ex], b = BOX_DIRS[ch]
+    grid[r][c] = (a && b) ? (FROM_DIRS[[a[0]|b[0],a[1]|b[1],a[2]|b[2],a[3]|b[3]].join('')] ?? ch) : ch
+  }
+
   const drawBox = (r1, c1, r2, c2, label) => {
     if (c2 <= c1 || r2 <= r1) return
-    for (let c = c1; c <= c2; c++) { grid[r1][c] = '─'; grid[r2][c] = '─' }
-    for (let r = r1; r <= r2; r++) { grid[r][c1] = '│'; grid[r][c2] = '│' }
-    grid[r1][c1] = '┌'; grid[r1][c2] = '┐'
-    grid[r2][c1] = '└'; grid[r2][c2] = '┘'
+    for (let c = c1 + 1; c < c2; c++) { put(r1, c, '─'); put(r2, c, '─') }
+    for (let r = r1 + 1; r < r2; r++) { put(r, c1, '│'); put(r, c2, '│') }
+    put(r1, c1, '┌'); put(r1, c2, '┐')
+    put(r2, c1, '└'); put(r2, c2, '┘')
     const midR = Math.round((r1 + r2) / 2)
     const innerW = c2 - c1 - 1
     if (innerW > 0 && label) {
