@@ -1,15 +1,17 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import './WireframeEditor.css'
-import { PRESETS, CANVAS_MIN_W, CANVAS_MIN_H, CANVAS_PAD, nextId, setNextId, resetNextId, generateFullDocument, downloadBlob } from './utils'
+import { PRESETS, CANVAS_MIN_W, CANVAS_MIN_H, CANVAS_PAD, nextId, setNextId, resetNextId, generateFullDocument, downloadBlob, getAsciiSnap } from './utils'
 import { useDrag } from './hooks/useDrag'
 import { useKeyboard } from './hooks/useKeyboard'
 import { useZoom } from './hooks/useZoom'
 import { useLiveMode } from './hooks/useLiveMode'
+import { useSelectionBox } from './hooks/useSelectionBox'
 import Block from './components/Block'
 
 export default function WireframeEditor() {
   const [blocks, setBlocks] = useState([])
   const [selected, setSelected] = useState(null)
+  const [multiSelected, setMultiSelected] = useState(new Set())
   const [editingId, setEditingId] = useState(null)
   const [editText, setEditText] = useState('')
   const [saveStatus, setSaveStatus] = useState('')
@@ -27,10 +29,12 @@ export default function WireframeEditor() {
   const editingIdRef = useRef(null)
   const clipboardRef = useRef(null)
   const historyRef = useRef([])
+  const multiSelectedRef = useRef(new Set())
 
   useEffect(() => { blocksRef.current = blocks }, [blocks])
   useEffect(() => { selectedRef.current = selected }, [selected])
   useEffect(() => { editingIdRef.current = editingId }, [editingId])
+  useEffect(() => { multiSelectedRef.current = multiSelected }, [multiSelected])
 
   const pushHistory = useCallback(() => {
     historyRef.current.push({ blocks: blocksRef.current, selected: selectedRef.current })
@@ -38,8 +42,9 @@ export default function WireframeEditor() {
   }, [])
 
   const { zoom, zoomRef, changeZoom, resetZoom, fitAll } = useZoom(canvasRef)
-  const { suppressNextClickRef, startMove, startResize } = useDrag(zoomRef, blocksRef, setBlocks, setSelected, pushHistory, editingIdRef)
-  useKeyboard({ selected, editingId, editingName, historyRef, clipboardRef, pushHistory, setBlocks, setSelected, setShowUI, setLabelSize })
+  const { suppressNextClickRef, startMove, startResize } = useDrag(zoomRef, blocksRef, setBlocks, setSelected, pushHistory, editingIdRef, multiSelectedRef, setMultiSelected)
+  const { selectionBox, onCanvasMouseDown } = useSelectionBox(zoomRef, designRef, blocksRef, suppressNextClickRef, setMultiSelected, setSelected)
+  useKeyboard({ selected, editingId, editingName, historyRef, clipboardRef, pushHistory, setBlocks, setSelected, setShowUI, setLabelSize, multiSelected, setMultiSelected })
   useLiveMode(liveMode, setBlocks)
 
   const addBlock = useCallback((e) => {
@@ -47,11 +52,13 @@ export default function WireframeEditor() {
     if (e.target.closest('.wf-block:not(.frame)')) return
     const rect = designRef.current.getBoundingClientRect()
     const z = zoomRef.current
-    const snap = v => Math.round(v / 20) * 20
-    const x = snap((e.clientX - rect.left) / z - 75)
-    const y = snap((e.clientY - rect.top)  / z - 30)
+    const frame = blocksRef.current.find(b => b.type === 'frame')
+    const { snapX, snapY } = getAsciiSnap(frame)
+    const x = Math.round(((e.clientX - rect.left) / z - 75) / snapX) * snapX
+    const y = Math.round(((e.clientY - rect.top)  / z - 30) / snapY) * snapY
     const id = nextId()
     pushHistory()
+    setMultiSelected(new Set())
     setBlocks(prev => [...prev, { id, label: 'Block', x: Math.max(0, x), y: Math.max(0, y), w: 160, h: 60, valign: 'center' }])
     setSelected(id)
   }, [pushHistory, suppressNextClickRef, zoomRef])
@@ -74,9 +81,9 @@ export default function WireframeEditor() {
     const id = nextId()
     setBlocks(prev => [...prev, { id, label: `${preset.label} ${preset.w}×${preset.h}`, x: 40, y: 40, w: preset.w, h: preset.h, valign: 'top', type: 'frame' }])
     setSelected(id)
+    setMultiSelected(new Set())
     canvasRef.current?.scrollTo({ top: 0, left: 0, behavior: 'smooth' })
   }, [pushHistory])
-
 
   const saveLayout = useCallback(() => {
     downloadBlob(JSON.stringify(blocks, null, 2), `${layoutName}.json`, 'application/json')
@@ -108,7 +115,7 @@ export default function WireframeEditor() {
 
   const clearAll = useCallback(() => {
     if (!blocks.length) return
-    pushHistory(); setBlocks([]); setSelected(null); resetNextId()
+    pushHistory(); setBlocks([]); setSelected(null); setMultiSelected(new Set()); resetNextId()
   }, [blocks, pushHistory])
 
   const startEditName = useCallback(() => { setEditNameText(layoutName); setEditingName(true) }, [layoutName])
@@ -124,7 +131,7 @@ export default function WireframeEditor() {
       {!showUI && <button className="wf-ui-toggle" onClick={() => setShowUI(true)} title="顯示工具列 (`)">☰</button>}
       {showUI && <div className="wf-toolbar">
         <div className="wf-left">
-          <span className="wf-hint">點擊畫布新增 · 拖拉移動 · Shift+拖拉鎖軸 · Ctrl+Shift+拖拉複製 · 雙擊改名 · Delete 刪除 · Ctrl+C 複製 · Ctrl+X 剪下 · Ctrl+V 貼上 · Ctrl+Z 復原 · Ctrl+滾輪縮放</span>
+          <span className="wf-hint">點擊畫布新增 · 拖拉框選多選 · Shift+拖拉鎖軸 · Ctrl+Shift+拖拉複製 · 雙擊改名 · Delete 刪除 · Ctrl+C 複製 · Ctrl+X 剪下 · Ctrl+V 貼上 · Ctrl+Z 復原 · Esc 取消選取</span>
         </div>
         <div className="wf-center">
           {editingName
@@ -132,7 +139,7 @@ export default function WireframeEditor() {
             : <span className="wf-name" title="點擊編輯名稱" onClick={startEditName}>{layoutName}</span>}
         </div>
         <div className="wf-actions">
-          {selectedBlock && selectedBlock.type !== 'frame' && (
+          {selectedBlock && selectedBlock.type !== 'frame' && multiSelected.size === 0 && (
             <div className="wf-valign">
               <span className="wf-valign-label">文字：</span>
               {['top', 'center', 'bottom'].map(v => (
@@ -143,6 +150,9 @@ export default function WireframeEditor() {
               ))}
               <span className="wf-divider" />
             </div>
+          )}
+          {multiSelected.size > 0 && (
+            <span className="wf-multi-count">{multiSelected.size} 個已選取</span>
           )}
           {saveStatus && <span className="wf-status">{saveStatus}</span>}
           <div className="wf-fontsize">
@@ -163,13 +173,21 @@ export default function WireframeEditor() {
       <div className="wf-body">
         <div className="wf-canvas" ref={canvasRef}>
           <div className="wf-canvas-wrapper" onClick={addBlock} style={{ width: canvasW * zoom, height: canvasH * zoom }}>
-            <div className="wf-canvas-inner" ref={designRef}
+            <div className="wf-canvas-inner" ref={designRef} onMouseDown={onCanvasMouseDown}
               style={{ transform: `scale(${zoom})`, transformOrigin: '0 0', width: canvasW, height: canvasH, '--label-size': `${labelSize}px` }}>
               {sortedBlocks.map(b => (
-                <Block key={b.id} b={b} selected={selected} editingId={editingId} editText={editText}
+                <Block key={b.id} b={b} selected={selected} multiSelected={multiSelected} editingId={editingId} editText={editText}
                   setEditText={setEditText} commitEdit={commitEdit}
                   startMove={startMove} startResize={startResize} startEdit={startEdit} />
               ))}
+              {selectionBox && (
+                <div className="wf-selection-box" style={{
+                  left: selectionBox.x,
+                  top: selectionBox.y,
+                  width: selectionBox.w,
+                  height: selectionBox.h,
+                }} />
+              )}
             </div>
           </div>
         </div>

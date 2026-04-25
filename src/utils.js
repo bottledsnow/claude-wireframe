@@ -1,3 +1,15 @@
+export const ASCII_COLS = 60
+export const asciiRows = (vW, vH) =>
+  Math.min(40, Math.max(6, Math.round(ASCII_COLS * (vH / vW) * 0.5)))
+export const getAsciiSnap = frame => {
+  if (!frame) return { snapX: 20, snapY: 20 }
+  const rows = asciiRows(frame.w, frame.h)
+  return {
+    snapX: Math.max(1, Math.round(frame.w / ASCII_COLS)),
+    snapY: Math.max(1, Math.round(frame.h / rows)),
+  }
+}
+
 export const VALIGN_STYLE = {
   top:    { alignItems: 'flex-start', paddingTop: 6 },
   center: { alignItems: 'center' },
@@ -92,9 +104,9 @@ export function generateLayoutMd(blocks, layoutName) {
 
 // ── 低階：畫一張 ASCII 方塊圖 ──────────────────────────────
 function drawAscii(viewport, innerBlocks) {
-  const COLS = 60
+  const COLS = ASCII_COLS
   const { w: vW, h: vH, x: vX = 0, y: vY = 0 } = viewport
-  const ROWS = Math.min(40, Math.max(6, Math.round(COLS * (vH / vW) * 0.5)))
+  const ROWS = asciiRows(vW, vH)
   const grid = Array.from({ length: ROWS }, () => Array(COLS).fill(' '))
 
   const toCol = px => Math.min(COLS - 1, Math.max(0, Math.round(px / vW * (COLS - 1))))
