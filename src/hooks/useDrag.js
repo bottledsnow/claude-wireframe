@@ -1,7 +1,7 @@
 import { useRef, useEffect } from 'react'
-import { nextId, getAsciiSnap } from '../utils'
+import { nextId, GRID } from '../utils'
 
-const snapV = (v, s) => Math.round(v / s) * s
+const snap = v => Math.round(v / GRID) * GRID
 
 export function useDrag(zoomRef, blocksRef, setBlocks, setSelected, pushHistory, editingIdRef, multiSelectedRef, setMultiSelected) {
   const dragRef = useRef(null)
@@ -17,20 +17,18 @@ export function useDrag(zoomRef, blocksRef, setBlocks, setSelected, pushHistory,
       if (e.shiftKey && (type === 'move' || type === 'multi-move')) {
         if (Math.abs(dx) >= Math.abs(dy)) dy = 0; else dx = 0
       }
-      const frame = blocksRef.current.find(b => b.type === 'frame')
-      const { snapX, snapY } = getAsciiSnap(frame)
       if (type === 'multi-move') {
         setBlocks(prev => prev.map(b => {
           const sb = startBlocks[b.id]
           if (!sb) return b
-          return { ...b, x: snapV(Math.max(0, sb.x + dx), snapX), y: snapV(Math.max(0, sb.y + dy), snapY) }
+          return { ...b, x: snap(Math.max(0, sb.x + dx)), y: snap(Math.max(0, sb.y + dy)) }
         }))
         return
       }
       setBlocks(prev => prev.map(b => {
         if (b.id !== id) return b
-        if (type === 'move')   return { ...b, x: snapV(Math.max(0, startBlock.x + dx), snapX), y: snapV(Math.max(0, startBlock.y + dy), snapY) }
-        if (type === 'resize') return { ...b, w: Math.max(snapX * 2, snapV(startBlock.w + dx, snapX)), h: Math.max(snapY * 2, snapV(startBlock.h + dy, snapY)) }
+        if (type === 'move')   return { ...b, x: snap(Math.max(0, startBlock.x + dx)), y: snap(Math.max(0, startBlock.y + dy)) }
+        if (type === 'resize') return { ...b, w: Math.max(GRID * 4, snap(startBlock.w + dx)), h: Math.max(GRID * 2, snap(startBlock.h + dy)) }
         return b
       }))
     }

@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import './WireframeEditor.css'
-import { PRESETS, CANVAS_MIN_W, CANVAS_MIN_H, CANVAS_PAD, nextId, setNextId, resetNextId, generateFullDocument, downloadBlob, getAsciiSnap } from './utils'
+import { PRESETS, CANVAS_MIN_W, CANVAS_MIN_H, CANVAS_PAD, nextId, setNextId, resetNextId, generateFullDocument, downloadBlob, GRID } from './utils'
 import { useDrag } from './hooks/useDrag'
 import { useKeyboard } from './hooks/useKeyboard'
 import { useZoom } from './hooks/useZoom'
@@ -52,14 +52,13 @@ export default function WireframeEditor() {
     if (e.target.closest('.wf-block:not(.frame)')) return
     const rect = designRef.current.getBoundingClientRect()
     const z = zoomRef.current
-    const frame = blocksRef.current.find(b => b.type === 'frame')
-    const { snapX, snapY } = getAsciiSnap(frame)
-    const x = Math.round((e.clientX - rect.left) / z / snapX) * snapX
-    const y = Math.round((e.clientY - rect.top)  / z / snapY) * snapY
+    const snap = v => Math.round(v / GRID) * GRID
+    const x = snap((e.clientX - rect.left) / z)
+    const y = snap((e.clientY - rect.top)  / z)
     const id = nextId()
     pushHistory()
     setMultiSelected(new Set())
-    setBlocks(prev => [...prev, { id, label: 'Block', x: Math.max(0, x), y: Math.max(0, y), w: snapX * 5, h: snapY * 2, valign: 'center' }])
+    setBlocks(prev => [...prev, { id, label: 'Block', x: Math.max(0, x), y: Math.max(0, y), w: 160, h: 80, valign: 'center' }])
     setSelected(id)
   }, [pushHistory, suppressNextClickRef, zoomRef])
 

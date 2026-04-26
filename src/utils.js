@@ -1,14 +1,8 @@
+export const GRID = 20
 export const ASCII_COLS = 60
-export const asciiRows = (vW, vH) =>
-  Math.min(40, Math.max(6, Math.round(ASCII_COLS * (vH / vW) * 0.5)))
-export const getAsciiSnap = frame => {
-  if (!frame) return { snapX: 20, snapY: 20 }
-  const rows = asciiRows(frame.w, frame.h)
-  return {
-    snapX: Math.max(1, Math.round(frame.w / ASCII_COLS)),
-    snapY: Math.max(1, Math.round(frame.h / rows)),
-  }
-}
+// 確保高度 GRID*2 (40px) 的 block 在 ASCII 一定可見
+export const asciiRows = (_vW, vH) =>
+  Math.min(54, Math.max(6, Math.ceil(1 + 1.5 * vH / (GRID * 2))))
 
 export const VALIGN_STYLE = {
   top:    { alignItems: 'flex-start', paddingTop: 6 },
